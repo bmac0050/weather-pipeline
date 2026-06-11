@@ -13,7 +13,7 @@ def load_weather_data():
     
     with engine.begin() as conn:
         conn.execute(text("""
-            CREATE TABLE IF NOT EXISTS weather_raw (
+            CREATE TABLE IF NOT EXISTS raw.weather_raw (
                 id SERIAL PRIMARY KEY,
                 city VARCHAR(100),
                 temperature FLOAT,
@@ -24,7 +24,7 @@ def load_weather_data():
         """))
 
         df.to_sql(
-            "weather_observations",
+            "weather_raw",
             con=conn,
             schema="raw",
             if_exists="append",
@@ -32,7 +32,7 @@ def load_weather_data():
             chunksize=1000
         )
 
-    print(f"Loaded {len(df)} rows into raw.weather_observations")
+    print(f"Loaded {len(df)} rows into raw.weather_raw")
 
 if __name__ == "__main__":
     load_weather_data()
