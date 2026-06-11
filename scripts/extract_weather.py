@@ -1,4 +1,7 @@
 import requests
+import pandas as pd
+from datetime import datetime
+
 
 from config.settings import OPENWEATHER_API_KEY
 
@@ -17,6 +20,18 @@ print("Status:", response.status_code)
 
 data = response.json()
 
-print("City:", data["name"])
-print("Temperature:", data["main"]["temp"])
-print("Humidity:", data["main"]["humidity"])
+weather_data = [{
+    "city": data["name"],
+    "temperature": data["main"]["temp"],
+    "humidity": data["main"]["humidity"],
+    "weather_timestamp": datetime.fromtimestamp(data["dt"]),
+    "retrieved_at": datetime.now()
+}]
+
+df = pd.DataFrame(weather_data)
+
+# Display the DataFrame
+# print(df)
+
+# Write the DataFrame to a CSV file
+df.to_csv("data/raw/weather_data.csv", index=False)
