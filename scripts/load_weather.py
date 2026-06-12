@@ -6,8 +6,10 @@ CSV_PATH = "data/raw/weather_data.csv"
 
 def load_weather_data():
     # Read the CSV file into a pandas DataFrame
+    print("Loading weather data from CSV...")
     df = pd.read_csv(CSV_PATH)
     
+
     # Create a SQLAlchemy engine
     engine = create_engine(DB_URL)
     
@@ -23,6 +25,7 @@ def load_weather_data():
             );
         """))
 
+        print("Loading weather data into weather_raw table...")
         df.to_sql(
             "weather_raw",
             con=conn,
@@ -32,7 +35,7 @@ def load_weather_data():
             chunksize=1000
         )
 
-    print(f"Loaded {len(df)} rows into raw.weather_raw")
+    print(f"Loaded {len(df)} rows into weather_raw...")
 
 if __name__ == "__main__":
     load_weather_data()
