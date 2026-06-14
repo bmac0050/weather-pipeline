@@ -1,6 +1,10 @@
 from sqlalchemy import create_engine, text
-from config.settings import DB_URL
+import os
+from dotenv import load_dotenv
 
+load_dotenv()
+
+DB_URL = os.getenv("DB_URL")
 
 def transform_weather_data():
     engine = create_engine(DB_URL)

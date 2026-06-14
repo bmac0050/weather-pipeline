@@ -1,6 +1,6 @@
 import requests
 import pandas as pd
-from datetime import datetime
+from datetime import datetime, timezone
 from time import sleep
 from config.settings import OPENWEATHER_API_KEY
 
@@ -28,7 +28,7 @@ for city in cities:
             'temperature': data['main']['temp'],
             'humidity': data['main']['humidity'],
             'weather_timestamp': datetime.fromtimestamp(data['dt']),
-            'retrieved_at': datetime.now()
+            'retrieved_at': datetime.now(timezone.utc)
         })
 
         sleep(3.0)
