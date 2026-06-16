@@ -1,6 +1,8 @@
 CREATE SCHEMA IF NOT EXISTS raw;
 
-CREATE TABLE IF NOT EXISTS raw.weather_observations (
+
+
+CREATE TABLE IF NOT EXISTS analytics.current_weather (
     id SERIAL PRIMARY KEY,
     city TEXT NOT NULL,
     country TEXT,
@@ -11,6 +13,6 @@ CREATE TABLE IF NOT EXISTS raw.weather_observations (
     weather_main TEXT,
     weather_description TEXT,
     wind_speed NUMERIC(6,2),
-    observed_at TIMESTAMP,
-    retrieved_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    observed_at TIMESTAMPTZ,
+    retrieved_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );

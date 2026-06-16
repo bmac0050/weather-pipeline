@@ -3,46 +3,68 @@ import pandas as pd
 from datetime import datetime, timezone
 from time import sleep
 from config.settings import OPENWEATHER_API_KEY
+import logging
+from pathlib import Path
 
-datafile = "data/raw/weather_data.csv"
-cities = ["Cincinnati, OH, US", "Dallas, TX, US", "Wilmington, NC, US"]
-url = 'https://api.openweathermap.org/data/2.5/weather'
-weather_rows = []
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+DATA_DIR = PROJECT_ROOT / "data"
+CSV_PATH = DATA_DIR / "weather_data.csv"
 
-for city in cities:
-    try:
-        params = {
-            "q": city,
-            "units": "imperial",
-            "appid": OPENWEATHER_API_KEY
-        }
-        print(f'Retrieving weather data for {city}...')
-        response = requests.get(url, params=params)
-        response.raise_for_status()  # Raise an error for HTTP errors
-        print(f"Status for {city}: {response.status_code}")
+DATA_DIR.mkdir(parents=True, exist_ok=True)
 
-        data = response.json()
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s"
+)
+logger = logging.getLogger(__name__)
 
-        weather_rows.append({
-            'city': data['name'],
-            'temperature': data['main']['temp'],
-            'humidity': data['main']['humidity'],
-            'weather_timestamp': datetime.fromtimestamp(data['dt']),
-            'retrieved_at': datetime.now(timezone.utc)
-        })
+def extract_weather_data():
 
-        sleep(3.0)
+    cities = ["Cincinnati, OH, US", "Dallas, TX, US", "Wilmington, NC, US"]
+    datafile = "data/raw/weather_raw.csv"
+    url = 'https://api.openweathermap.org/data/2.5/weather'
+    weather_rows = []
 
-    except requests.RequestException as e:
-        print(f"Error fetching weather data for {city}: {e}")
-        continue
+    for city in cities:
+        try:
+            params = {
+                "q": city,
+                "units": "imperial",
+                "appid": OPENWEATHER_API_KEY
+            }
+            logger.info(f'Retrieving weather data for {city}...')
+            response = requests.get(url, params=params)
+            response.raise_for_status()  # Raise an error for HTTP errors
+            logger.info(f"Status for {city}: {response.status_code}")
+
+            data = response.json()
+
+            weather_rows.append({
+                'city': data['name'],
+                'temperature': data['main']['temp'],
+                'humidity': data['main']['humidity'],
+                'weather_timestamp': datetime.fromtimestamp(data['dt'], tz=timezone.utc),
+                'retrieved_at': datetime.now(timezone.utc)
+            })
+
+            sleep(3.0)
+
+        except requests.RequestException as e:
+            logger.info(f"Error fetching weather data for {city}: {e}")
+            continue
 
 
-df = pd.DataFrame(weather_rows)
+    df = pd.DataFrame(weather_rows)
 
-# Display the DataFrame
-print(df)
+    if df.empty:
+        raise ValueError("No weather data was extracted.")
 
-# Write the DataFrame to a CSV file
-print(f"Retrieved {len(df)} weather records")
-df.to_csv(datafile, index=False)
+    # Display the DataFrame
+    logger.info(df)
+
+    # Write the DataFrame to a CSV file
+    logger.info(f"Retrieved {len(df)} weather records")
+    df.to_csv(CSV_PATH, index=False)
+
+if __name__ == "__main__":
+    extract_weather_data()
