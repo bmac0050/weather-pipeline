@@ -1,37 +1,47 @@
-from airflow import DAG
-from airflow.providers.standard.operators.python import PythonOperator
 import sys
+from datetime import datetime, timedelta
+from airflow.decorators import dag, task
+
 sys.path.append("/opt/airflow/project")
+
 from scripts.extract_weather import extract_weather_data
 from scripts.load_weather import load_weather_data
 from scripts.transform_weather import transform_weather_data
-from datetime import datetime, timedelta
 
-with DAG(
+
+default_args = {
+    "owner": "Brian",
+    "retries": 2,
+    "retry_delay": timedelta(minutes=1),
+}
+
+@dag(
     dag_id="weather_pipeline",
     start_date=datetime(2026, 1, 1),
     schedule="@hourly",
     catchup=False,
-    default_args = {
-        "owner": "Brian",
-        "retries": 2,
-        "retry_delay": timedelta(minutes=1),
-    },
-) as dag:
+    default_args=default_args,
+    tags=["weather", "etl", "postgres"]
+    
+)
 
-    extract = PythonOperator(
-        task_id="extract_weather",
-        python_callable=extract_weather_data,
-    )
+def weather_pipeline():
+    @task
+    def extract_weather():
+        extract_weather_data()
 
-    load = PythonOperator(
-        task_id="load_weather",
-        python_callable=load_weather_data,
-    )
+    @task
+    def load_weather():
+        load_weather_data()
 
-    transform = PythonOperator(
-        task_id="transform_weather",
-        python_callable=transform_weather_data,
-    )
+    @task
+    def transform_weather():
+        transform_weather_data()
+
+    extract = extract_weather()
+    load = load_weather()
+    transform = transform_weather()
 
     extract >> load >> transform
+
+weather_pipeline()

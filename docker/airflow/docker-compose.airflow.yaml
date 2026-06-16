@@ -107,6 +107,8 @@ services:
       retries: 5
       start_period: 5s
     restart: always
+    networks:
+      - airflow
 
   redis:
     # Redis is limited to 7.2-bookworm due to licencing change
@@ -121,6 +123,8 @@ services:
       retries: 50
       start_period: 30s
     restart: always
+    networks:
+      - airflow
 
   airflow-apiserver:
     <<: *airflow-common
@@ -138,6 +142,9 @@ services:
       <<: *airflow-common-depends-on
       airflow-init:
         condition: service_completed_successfully
+    networks:
+      - airflow
+      - weather_db_default
 
   airflow-scheduler:
     <<: *airflow-common
@@ -153,6 +160,9 @@ services:
       <<: *airflow-common-depends-on
       airflow-init:
         condition: service_completed_successfully
+    networks:
+      - airflow
+      - weather_db_default
 
   airflow-dag-processor:
     <<: *airflow-common
@@ -168,6 +178,9 @@ services:
       <<: *airflow-common-depends-on
       airflow-init:
         condition: service_completed_successfully
+    networks:
+      - airflow
+      - weather_db_default
 
   airflow-worker:
     <<: *airflow-common
@@ -185,6 +198,9 @@ services:
       # See https://airflow.apache.org/docs/docker-stack/entrypoint.html#signal-propagation
       DUMB_INIT_SETSID: "0"
     restart: always
+    networks:
+      - airflow
+      - weather_db_default
     depends_on:
       <<: *airflow-common-depends-on
       airflow-apiserver:
@@ -206,6 +222,9 @@ services:
       <<: *airflow-common-depends-on
       airflow-init:
         condition: service_completed_successfully
+    networks:
+      - airflow
+      - weather_db_default
 
   airflow-init:
     <<: *airflow-common
@@ -298,6 +317,9 @@ services:
       _AIRFLOW_WWW_USER_PASSWORD: ${_AIRFLOW_WWW_USER_PASSWORD:-airflow}
       _PIP_ADDITIONAL_REQUIREMENTS: ''
     user: "0:0"
+    networks:
+      - airflow
+      - weather_db_default
 
   airflow-cli:
     <<: *airflow-common
@@ -313,6 +335,9 @@ services:
       - airflow
     depends_on:
       <<: *airflow-common-depends-on
+    networks:
+      - airflow
+      - weather_db_default
 
   # You can enable flower by adding "--profile flower" option e.g. docker-compose --profile flower up
   # or by explicitly targeted on the command line e.g. docker-compose up flower.
@@ -335,11 +360,14 @@ services:
       <<: *airflow-common-depends-on
       airflow-init:
         condition: service_completed_successfully
+    networks:
+      - airflow
+      - weather_db_default
 
 volumes:
   postgres-db-volume:
 
 networks:
-  default:
+  airflow:
+  weather_db_default:
     external: true
-    name: weather_db_default
